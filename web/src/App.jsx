@@ -1,34 +1,30 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg' // ✅ still fine
-import './App.css'
+import './App.css';
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank" rel="noreferrer">
-          <img src="/vite.svg" className="logo" alt="Vite logo" /> {/* ✅ FIXED */}
-        </a>
-        <a href="https://react.dev" target="_blank" rel="noreferrer">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="app">
+      <header className="hero">
+        <h1>🧘 CalmSpace</h1>
+        <p>Your peaceful place to reflect on your mood.</p>
+      </header>
+
+      <main>
+        <section className="mood-log">
+          <h2>How are you feeling today?</h2>
+          <button className="log-btn">Log My Mood</button>
+        </section>
+
+        <section className="stats-preview">
+          <h3>Mood Stats</h3>
+          <p>(Coming soon...)</p>
+        </section>
+      </main>
+
+      <footer>
+        <p>Built with 💙 by Huzaifa</p>
+      </footer>
+    </div>
+  );
 }
 
-export default App
+export default App;
