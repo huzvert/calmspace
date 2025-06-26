@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-
+import reactLogo from './assets/react.svg' // ✅ still fine
 import './App.css'
 
 function App() {
@@ -9,10 +8,10 @@ function App() {
   return (
     <>
       <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
+        <a href="https://vite.dev" target="_blank" rel="noreferrer">
+          <img src="/vite.svg" className="logo" alt="Vite logo" /> {/* ✅ FIXED */}
         </a>
-        <a href="https://react.dev" target="_blank">
+        <a href="https://react.dev" target="_blank" rel="noreferrer">
           <img src={reactLogo} className="logo react" alt="React logo" />
         </a>
       </div>
