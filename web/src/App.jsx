@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 
 function App() {
   const [selectedMood, setSelectedMood] = useState(null);
   const [isLogged, setIsLogged] = useState(false);
+  const [stats, setStats] = useState(null);
 
   const moods = [
     { emoji: '😊', label: 'Happy', color: '#FFE5B4' },
@@ -13,19 +14,35 @@ function App() {
     { emoji: '😴', label: 'Tired', color: '#E5F3E5' }
   ];
 
+  // Handle mood selection
   const handleMoodSelect = (mood) => {
     setSelectedMood(mood);
   };
 
+  // Handle mood logging
   const handleLogMood = () => {
     if (selectedMood) {
       setIsLogged(true);
+      // This should be an API call in the future
       setTimeout(() => {
         setIsLogged(false);
         setSelectedMood(null);
+        fetchStats(); // re-fetch stats after logging
       }, 2000);
     }
   };
+
+  // Fetch stats from backend
+  const fetchStats = () => {
+    fetch('/api/mood-stats')
+      .then((res) => res.json())
+      .then((data) => setStats(data))
+      .catch((err) => console.error('Error fetching stats:', err));
+  };
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
 
   return (
     <div className="app">
@@ -38,7 +55,7 @@ function App() {
       <header className="hero">
         <div className="hero-content">
           <h1 className="app-title">
-            <span className="meditation-icon">🧘</span>
+            
             CalmSpace
           </h1>
           <p className="app-subtitle">Your peaceful sanctuary for mindful reflection</p>
@@ -48,7 +65,7 @@ function App() {
       <main className="main-content">
         <section className="mood-log">
           <h2 className="section-title">How are you feeling today?</h2>
-          
+
           <div className="mood-selector">
             {moods.map((mood, index) => (
               <div
@@ -63,7 +80,7 @@ function App() {
             ))}
           </div>
 
-          <button 
+          <button
             className={`log-btn ${selectedMood ? 'active' : ''} ${isLogged ? 'logged' : ''}`}
             onClick={handleLogMood}
             disabled={!selectedMood || isLogged}
@@ -76,15 +93,17 @@ function App() {
           <h3 className="stats-title">Your Mood Journey</h3>
           <div className="stats-grid">
             <div className="stat-card">
-              <div className="stat-number">7</div>
+              <div className="stat-number">{stats?.daysTracked ?? '-'}</div>
               <div className="stat-label">Days tracked</div>
             </div>
             <div className="stat-card">
-              <div className="stat-number">😊</div>
+              <div className="stat-number">{stats?.mostCommonMood ?? '-'}</div>
               <div className="stat-label">Most common</div>
             </div>
             <div className="stat-card">
-              <div className="stat-number">85%</div>
+              <div className="stat-number">
+                {stats?.positiveDaysPercentage != null ? `${stats.positiveDaysPercentage}%` : '-'}
+              </div>
               <div className="stat-label">Positive days</div>
             </div>
           </div>
