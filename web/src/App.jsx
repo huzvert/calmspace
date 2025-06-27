@@ -20,28 +20,78 @@ function App() {
   };
 
   // Handle mood logging
-  const handleLogMood = () => {
+  const handleLogMood = async () => {
     if (selectedMood) {
       setIsLogged(true);
-      // This should be an API call in the future
-      setTimeout(() => {
+      
+      try {
+        const payload = {
+          mood: selectedMood.label.toLowerCase(),
+          userId: 'user123', // You can make this dynamic later
+          timestamp: new Date().toISOString(),
+        };
+        
+        const response = await fetch('http://localhost:7071/api/CreateMoodEntry', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (response.ok) {
+          // Wait a moment, then fetch updated stats
+          setTimeout(async () => {
+            setIsLogged(false);
+            setSelectedMood(null);
+            await fetchStats(); // re-fetch stats after logging
+          }, 1000);
+        } else {
+          const errorText = await response.text();
+          console.error('Failed to log mood:', response.statusText, errorText);
+          setIsLogged(false);
+        }
+      } catch (error) {
+        console.error('Error logging mood:', error);
         setIsLogged(false);
-        setSelectedMood(null);
-        fetchStats(); // re-fetch stats after logging
-      }, 2000);
+      }
     }
   };
 
   // Fetch stats from backend
-  const fetchStats = () => {
-    fetch('/api/mood-stats')
-      .then((res) => res.json())
-      .then((data) => setStats(data))
-      .catch((err) => console.error('Error fetching stats:', err));
+  const fetchStats = async () => {
+    try {
+      const response = await fetch('http://localhost:7071/api/GetMoodStats?userId=user123');
+      
+      if (response.ok) {
+        const stats = await response.json();
+        setStats(stats);
+      } else {
+        const errorText = await response.text();
+        console.error('Failed to fetch stats:', response.statusText, errorText);
+      }
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
   };
 
   useEffect(() => {
-    fetchStats();
+    const loadInitialStats = async () => {
+      try {
+        const response = await fetch('http://localhost:7071/api/GetMoodStats?userId=user123');
+        
+        if (response.ok) {
+          const stats = await response.json();
+          setStats(stats);
+        } else {
+          console.error('Failed to fetch initial stats:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error fetching initial stats:', error);
+      }
+    };
+
+    loadInitialStats();
   }, []);
 
   return (
