@@ -1,0 +1,10 @@
+{
+  "name": "calmspace-api",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "func start"
+  },
+  "dependencies": {
+    "@azure/cosmos": "^4.4.1"
+  }
+}
