@@ -5,6 +5,11 @@
     "id": "Microsoft.Azure.Functions.ExtensionBundle",
     "version": "[4.*, 5.0.0)"
   },
+  "extensions": {
+    "signalRService": {
+      "connectionStringSetting": "AzureSignalRConnectionString"
+    }
+  },
   "logging": {
     "logLevel": {
       "default": "Information"
@@ -25,7 +30,9 @@
       ],
       "allowedHeaders": [
         "Content-Type",
-        "Authorization"
+        "Authorization",
+        "x-signalr-user-agent",
+        "x-requested-with"
       ],
       "supportCredentials": false
     }

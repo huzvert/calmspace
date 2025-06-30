@@ -1,11 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+// import { useMsal } from '@azure/msal-react';
+import AuthButton from './AuthButton';
+import { useSignalR } from './useSignalR';
 import './App.css';
 
 function App() {
+  // const { accounts } = useMsal();
+  // const accounts = []; // Temporary: disable MSAL for now
   const [selectedMood, setSelectedMood] = useState(null);
   const [isLogged, setIsLogged] = useState(false);
   const [stats, setStats] = useState(null);
-
+  
   const moods = [
     { emoji: '😊', label: 'Happy', color: '#FFE5B4' },
     { emoji: '😌', label: 'Calm', color: '#E8F4FD' },
@@ -13,6 +18,19 @@ function App() {
     { emoji: '😰', label: 'Anxious', color: '#FFE5E5' },
     { emoji: '😴', label: 'Tired', color: '#E5F3E5' }
   ];
+
+  // Get authenticated user ID
+  const getUserId = useCallback(() => {
+    // const accounts = []; // Temporary: disable MSAL for now
+    // if (accounts.length > 0) {
+    //   return accounts[0].localAccountId || accounts[0].homeAccountId;
+    // }
+    return 'demo-user'; // Fallback for demo purposes
+  }, []);
+  
+  // Initialize SignalR connection
+  const userId = getUserId();
+  const { isConnected, messages } = useSignalR(userId);
 
   // Handle mood selection
   const handleMoodSelect = (mood) => {
@@ -27,9 +45,11 @@ function App() {
       try {
         const payload = {
           mood: selectedMood.label.toLowerCase(),
-          userId: 'user123', // You can make this dynamic later
+          userId: getUserId(), // Use authenticated user ID
           timestamp: new Date().toISOString(),
         };
+        
+        console.log('Logging mood:', payload);
         
         const response = await fetch('http://localhost:7071/api/CreateMoodEntry', {
           method: 'POST',
@@ -40,12 +60,15 @@ function App() {
         });
 
         if (response.ok) {
-          // Wait a moment, then fetch updated stats
+          console.log('Mood logged successfully');
+          
+          // Wait a moment, then reset UI and fetch updated stats
           setTimeout(async () => {
+            console.log('Resetting UI state');
             setIsLogged(false);
             setSelectedMood(null);
             await fetchStats(); // re-fetch stats after logging
-          }, 1000);
+          }, 1500);
         } else {
           const errorText = await response.text();
           console.error('Failed to log mood:', response.statusText, errorText);
@@ -61,7 +84,8 @@ function App() {
   // Fetch stats from backend
   const fetchStats = async () => {
     try {
-      const response = await fetch('http://localhost:7071/api/GetMoodStats?userId=user123');
+      const userId = getUserId();
+      const response = await fetch(`http://localhost:7071/api/GetMoodStats?userId=${userId}`);
       
       if (response.ok) {
         const stats = await response.json();
@@ -78,7 +102,8 @@ function App() {
   useEffect(() => {
     const loadInitialStats = async () => {
       try {
-        const response = await fetch('http://localhost:7071/api/GetMoodStats?userId=user123');
+        const userId = getUserId();
+        const response = await fetch(`http://localhost:7071/api/GetMoodStats?userId=${userId}`);
         
         if (response.ok) {
           const stats = await response.json();
@@ -92,7 +117,7 @@ function App() {
     };
 
     loadInitialStats();
-  }, []);
+  }, [getUserId]);
 
   return (
     <div className="app">
@@ -103,6 +128,7 @@ function App() {
       </div>
 
       <header className="hero">
+        <AuthButton />
         <div className="hero-content">
           <h1 className="app-title">
             
@@ -111,6 +137,65 @@ function App() {
           <p className="app-subtitle">Your peaceful sanctuary for mindful reflection</p>
         </div>
       </header>
+
+      {/* Real-time Connection Status & Notifications */}
+      <div className="realtime-status" style={{
+        position: 'fixed',
+        top: '70px',
+        left: '20px',
+        background: isConnected ? '#22c55e' : '#ef4444',
+        color: 'white',
+        padding: '8px 16px',
+        borderRadius: '20px',
+        fontSize: '12px',
+        zIndex: 1000
+      }}>
+        {isConnected ? '🟢 Live - Connected' : '🔴 Disconnected'}
+      </div>
+      
+      {/* Debug: Show message count */}
+      <div style={{
+        position: 'fixed',
+        top: '110px',
+        left: '20px',
+        background: '#3b82f6',
+        color: 'white',
+        padding: '4px 8px',
+        borderRadius: '10px',
+        fontSize: '10px',
+        zIndex: 1000
+      }}>
+        Messages: {messages.length}
+      </div>
+      
+      {messages.length > 0 && (
+        <div className="realtime-notifications" style={{
+          position: 'fixed',
+          top: '150px',
+          left: '20px',
+          maxWidth: '300px',
+          zIndex: 1000
+        }}>
+          {messages.slice(-3).map((msg, index) => (
+            <div key={index} className={`notification ${msg.type}`} style={{
+              background: '#4ade80',
+              color: 'white',
+              padding: '8px 12px',
+              margin: '4px 0',
+              borderRadius: '8px',
+              fontSize: '12px'
+            }}>
+              <span className="notification-time">
+                {msg.timestamp.toLocaleTimeString()}
+              </span>
+              <br />
+              <span className="notification-message">
+                {msg.data.message || JSON.stringify(msg.data)}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
 
       <main className="main-content">
         <section className="mood-log">

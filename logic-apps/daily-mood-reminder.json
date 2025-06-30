@@ -1,0 +1,71 @@
+{
+  "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+  "actions": {
+    "Check_if_mood_logged_today": {
+      "type": "Http",
+      "inputs": {
+        "method": "GET",
+        "uri": "https://YOUR_FUNCTION_APP.azurewebsites.net/api/GetMoodStats",
+        "queries": {
+          "userId": "@{triggerBody()['userId']}"
+        }
+      },
+      "runAfter": {}
+    },
+    "Condition_-_No_mood_today": {
+      "type": "If",
+      "expression": {
+        "and": [
+          {
+            "equals": [
+              "@outputs('Check_if_mood_logged_today')['body']['daysTracked']",
+              0
+            ]
+          }
+        ]
+      },
+      "actions": {
+        "Send_reminder_email": {
+          "type": "ApiConnection",
+          "inputs": {
+            "host": {
+              "connection": {
+                "name": "@parameters('$connections')['office365']['connectionId']"
+              }
+            },
+            "method": "post",
+            "path": "/v2/Mail",
+            "body": {
+              "To": "@triggerBody()['userEmail']",
+              "Subject": "🌟 Don't forget to log your mood today!",
+              "Body": "<p>Hi there! 👋</p><p>It looks like you haven't logged your mood today. Take a moment to reflect on how you're feeling and update your mood in CalmSpace.</p><p>Your mental health journey matters! 💙</p><p><a href='http://localhost:5173'>Log your mood now</a></p>"
+            }
+          }
+        }
+      },
+      "runAfter": {
+        "Check_if_mood_logged_today": ["Succeeded"]
+      }
+    }
+  },
+  "triggers": {
+    "Recurrence": {
+      "type": "Recurrence",
+      "recurrence": {
+        "frequency": "Day",
+        "interval": 1,
+        "schedule": {
+          "hours": [20],
+          "minutes": [0]
+        }
+      }
+    }
+  },
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "$connections": {
+      "defaultValue": {},
+      "type": "Object"
+    }
+  }
+}

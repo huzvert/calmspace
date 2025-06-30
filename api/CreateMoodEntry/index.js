@@ -46,6 +46,23 @@ module.exports = async function (context, req) {
 
     await container.items.create(newEntry);
 
+    // Send real-time update via SignalR to ALL connected clients
+    try {
+      context.bindings.signalRMessages = [{
+        target: 'moodupdated',
+        arguments: [{
+          mood,
+          timestamp,
+          userId,
+          message: `🎉 Someone logged: ${mood}`,
+          id: newEntry.id
+        }]
+      }];
+      context.log('SignalR mood update sent to all clients');
+    } catch (signalRError) {
+      context.log('SignalR broadcast error:', signalRError.message);
+    }
+
     context.res = {
       ...context.res,
       status: 201,

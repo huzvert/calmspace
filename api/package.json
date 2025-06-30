@@ -5,6 +5,7 @@
     "start": "func start"
   },
   "dependencies": {
-    "@azure/cosmos": "^4.4.1"
+    "@azure/cosmos": "^4.4.1",
+    "@azure/web-pubsub": "^1.2.0"
   }
 }

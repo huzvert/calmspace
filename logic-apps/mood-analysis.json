@@ -1,0 +1,78 @@
+{
+  "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+  "actions": {
+    "Get_recent_moods": {
+      "type": "Http",
+      "inputs": {
+        "method": "GET",
+        "uri": "https://YOUR_FUNCTION_APP.azurewebsites.net/api/GetRecentMoods",
+        "queries": {
+          "userId": "@triggerBody()['userId']",
+          "days": "3"
+        }
+      },
+      "runAfter": {}
+    },
+    "Check_for_concerning_pattern": {
+      "type": "If",
+      "expression": {
+        "or": [
+          {
+            "contains": [
+              "@outputs('Get_recent_moods')['body']['moodPattern']",
+              "sad,sad,sad"
+            ]
+          },
+          {
+            "contains": [
+              "@outputs('Get_recent_moods')['body']['moodPattern']",
+              "anxious,anxious,anxious"
+            ]
+          }
+        ]
+      },
+      "actions": {
+        "Send_support_email": {
+          "type": "ApiConnection",
+          "inputs": {
+            "host": {
+              "connection": {
+                "name": "@parameters('$connections')['office365']['connectionId']"
+              }
+            },
+            "method": "post",
+            "path": "/v2/Mail",
+            "body": {
+              "To": "@triggerBody()['userEmail']",
+              "Subject": "💙 We're here for you - Mental Health Resources",
+              "Body": "<h2>We've noticed you might be going through a tough time</h2><p>Your recent mood entries suggest you might benefit from some extra support. Remember, it's okay to not be okay, and seeking help is a sign of strength.</p><h3>Resources that might help:</h3><ul><li>🧘‍♀️ <a href='https://www.headspace.com'>Headspace - Meditation & Mindfulness</a></li><li>💬 <a href='https://www.betterhelp.com'>BetterHelp - Online Therapy</a></li><li>📞 Crisis Hotline: 988 (US)</li><li>🌐 <a href='https://www.mentalhealth.gov'>Mental Health Resources</a></li></ul><p>You're not alone in this journey. Take care of yourself! 💙</p>"
+            }
+          }
+        }
+      },
+      "runAfter": {
+        "Get_recent_moods": ["Succeeded"]
+      }
+    }
+  },
+  "triggers": {
+    "When_new_mood_entry_created": {
+      "type": "ApiConnectionWebhook",
+      "inputs": {
+        "host": {
+          "connection": {
+            "name": "@parameters('$connections')['azurefunctions']['connectionId']"
+          }
+        },
+        "path": "/triggers/httpTrigger"
+      }
+    }
+  },
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "$connections": {
+      "defaultValue": {},
+      "type": "Object"
+    }
+  }
+}

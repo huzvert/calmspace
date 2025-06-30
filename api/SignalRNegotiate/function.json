@@ -1,12 +1,12 @@
 {
-  "scriptFile": "index.js",
   "bindings": [
     {
       "authLevel": "anonymous",
       "type": "httpTrigger",
       "direction": "in",
       "name": "req",
-      "methods": ["post", "options"]
+      "methods": ["get", "post", "options"],
+      "route": "SignalRNegotiate/{*segments}"
     },
     {
       "type": "http",
@@ -14,10 +14,10 @@
       "name": "res"
     },
     {
-      "type": "signalR",
-      "name": "signalRMessages",
+      "type": "signalRConnectionInfo",
+      "name": "connectionInfo",
       "hubName": "calmspace",
-      "direction": "out"
+      "direction": "in"
     }
   ]
 }
