@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { HubConnectionBuilder, LogLevel, HttpTransportType } from '@microsoft/signalr';
+import { API_ENDPOINTS } from './config';
 
 export const useSignalR = (userId) => {
   const [connection, setConnection] = useState(null);
@@ -11,7 +12,7 @@ export const useSignalR = (userId) => {
     if (!userId) return; // Only check if userId exists, allow 'demo-user'
 
     const newConnection = new HubConnectionBuilder()
-      .withUrl('http://localhost:7071/api/SignalRNegotiate', {
+      .withUrl(API_ENDPOINTS.SIGNALR_NEGOTIATE, {
         withCredentials: false,
         timeout: 30000, // 30 seconds timeout
         transport: HttpTransportType.WebSockets | HttpTransportType.ServerSentEvents | HttpTransportType.LongPolling

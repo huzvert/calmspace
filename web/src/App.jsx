@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 // import { useMsal } from '@azure/msal-react';
 import AuthButton from './AuthButton';
 import { useSignalR } from './useSignalR';
+import { API_ENDPOINTS } from './config';
 import './App.css';
 
 function App() {
@@ -51,7 +52,7 @@ function App() {
         
         console.log('Logging mood:', payload);
         
-        const response = await fetch('http://localhost:7071/api/CreateMoodEntry', {
+        const response = await fetch(API_ENDPOINTS.CREATE_MOOD, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -85,7 +86,7 @@ function App() {
   const fetchStats = async () => {
     try {
       const userId = getUserId();
-      const response = await fetch(`http://localhost:7071/api/GetMoodStats?userId=${userId}`);
+      const response = await fetch(`${API_ENDPOINTS.GET_STATS}?userId=${userId}`);
       
       if (response.ok) {
         const stats = await response.json();
@@ -103,7 +104,7 @@ function App() {
     const loadInitialStats = async () => {
       try {
         const userId = getUserId();
-        const response = await fetch(`http://localhost:7071/api/GetMoodStats?userId=${userId}`);
+        const response = await fetch(`${API_ENDPOINTS.GET_STATS}?userId=${userId}`);
         
         if (response.ok) {
           const stats = await response.json();
