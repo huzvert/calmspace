@@ -9,6 +9,7 @@ import './App.css';
 function App() {
   const { isAuthenticated, isLoading, login, getUserId } = useAuth();
   const [selectedMood, setSelectedMood] = useState(null);
+  const [moodNote, setMoodNote] = useState('');
   const [isLogged, setIsLogged] = useState(false);
   const [stats, setStats] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -40,6 +41,7 @@ function App() {
           mood: selectedMood.label.toLowerCase(),
           userId: getUserId(), // Use authenticated user ID
           timestamp: new Date().toISOString(),
+          ...(moodNote.trim() && { note: moodNote.trim() }) // Include note if provided
         };
         
         console.log('Logging mood:', payload);
@@ -60,6 +62,7 @@ function App() {
             console.log('Resetting UI state');
             setIsLogged(false);
             setSelectedMood(null);
+            setMoodNote(''); // Reset note field
             await fetchStats(); // re-fetch stats after logging
           }, 1500);
         } else {
@@ -242,6 +245,26 @@ function App() {
                 <div className="mood-label">{mood.label}</div>
               </div>
             ))}
+          </div>
+
+          {/* Optional Journal Note */}
+          <div className="journal-note">
+            <label htmlFor="mood-note" className="note-label">
+              📝 Add a note (optional)
+            </label>
+            <textarea
+              id="mood-note"
+              className="note-input"
+              value={moodNote}
+              onChange={(e) => setMoodNote(e.target.value)}
+              placeholder="How was your day? What made you feel this way? (optional)"
+              rows="3"
+              maxLength="500"
+              disabled={isLogged}
+            />
+            <div className="character-count">
+              {moodNote.length}/500 characters
+            </div>
           </div>
 
           <button

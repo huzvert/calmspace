@@ -1,11 +1,47 @@
 import React, { useState } from 'react';
 import { useAuth } from './useAuth';
+import MoodHistory from './MoodHistory';
+import MoodAnalytics from './MoodAnalytics';
+import MoodGoals from './MoodGoals';
 
 const UserProfile = ({ onMenuToggle }) => {
   const { user, logout } = useAuth();
   const [showMenu, setShowMenu] = useState(false);
+  const [showMoodHistory, setShowMoodHistory] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showGoals, setShowGoals] = useState(false);
 
   if (!user) return null;
+
+  const handleMoodHistoryOpen = () => {
+    setShowMoodHistory(true);
+    setShowMenu(false);
+    onMenuToggle?.(false);
+  };
+
+  const handleMoodHistoryClose = () => {
+    setShowMoodHistory(false);
+  };
+
+  const handleAnalyticsOpen = () => {
+    setShowAnalytics(true);
+    setShowMenu(false);
+    onMenuToggle?.(false);
+  };
+
+  const handleAnalyticsClose = () => {
+    setShowAnalytics(false);
+  };
+
+  const handleGoalsOpen = () => {
+    setShowGoals(true);
+    setShowMenu(false);
+    onMenuToggle?.(false);
+  };
+
+  const handleGoalsClose = () => {
+    setShowGoals(false);
+  };
 
   const handleLogout = () => {
     logout();
@@ -54,7 +90,12 @@ const UserProfile = ({ onMenuToggle }) => {
             
             <div className="menu-divider"></div>
             
-            <button className="menu-item" onClick={() => {setShowMenu(false); onMenuToggle?.(false);}}>
+            <button className="menu-item" onClick={handleMoodHistoryOpen}>
+              <span className="menu-icon">📖</span>
+              Mood Journal
+            </button>
+            
+            <button className="menu-item" onClick={handleAnalyticsOpen}>
               <span className="menu-icon">📊</span>
               My Analytics
             </button>
@@ -64,7 +105,7 @@ const UserProfile = ({ onMenuToggle }) => {
               Settings
             </button>
             
-            <button className="menu-item" onClick={() => {setShowMenu(false); onMenuToggle?.(false);}}>
+            <button className="menu-item" onClick={handleGoalsOpen}>
               <span className="menu-icon">🎯</span>
               Mood Goals
             </button>
@@ -85,6 +126,21 @@ const UserProfile = ({ onMenuToggle }) => {
           className="menu-overlay" 
           onClick={() => {setShowMenu(false); onMenuToggle?.(false);}}
         ></div>
+      )}
+
+      {/* Mood History Modal */}
+      {showMoodHistory && (
+        <MoodHistory onClose={handleMoodHistoryClose} />
+      )}
+
+      {/* Analytics Modal */}
+      {showAnalytics && (
+        <MoodAnalytics onClose={handleAnalyticsClose} />
+      )}
+
+      {/* Goals Modal */}
+      {showGoals && (
+        <MoodGoals onClose={handleGoalsClose} />
       )}
     </>
   );
