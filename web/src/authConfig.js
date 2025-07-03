@@ -47,3 +47,47 @@ export const loginRequest = {
 export const graphConfig = {
   graphMeEndpoint: 'https://graph.microsoft.com/v1.0/me'
 };
+
+// Helper function to get user ID
+export const getUserId = () => {
+  // In production, this would extract the user ID from MSAL tokens
+  // For demo purposes, return a mock user ID
+  return 'demo-user-huzaifa';
+};
+
+// Mock authentication status
+export const isAuthenticated = () => {
+  // In production, this would check MSAL authentication status
+  return false; // Set to false for demo mode
+};
+
+// Azure AD B2C Architecture Explanation (for presentation)
+export const authArchitecture = {
+  description: "Azure AD B2C provides enterprise-grade identity management for customer-facing applications",
+  features: [
+    "🔐 Multi-factor Authentication (MFA)",
+    "🌐 Social Identity Providers (Google, Facebook, LinkedIn)",
+    "📱 Custom User Journeys and Policies", 
+    "🔒 Conditional Access Policies",
+    "🛡️ Identity Protection and Risk Detection",
+    "📊 Advanced Analytics and Monitoring",
+    "🔄 Seamless Single Sign-On (SSO)",
+    "⚡ Scalable to millions of users",
+    "🎨 Customizable UI and Branding",
+    "🌍 Global Scale and Compliance"
+  ],
+  implementation: {
+    frontend: "MSAL.js library for React SPA integration",
+    backend: "JWT token validation in Azure Functions", 
+    policies: "Custom B2C user flows for sign-up/sign-in/profile editing",
+    security: "OAuth 2.0 and OpenID Connect protocols",
+    storage: "Secure token caching and session management"
+  },
+  benefits: [
+    "🚀 Reduce development time by 80%",
+    "🔒 Enterprise-grade security out of the box", 
+    "💰 Cost-effective identity solution",
+    "📈 Built-in analytics and insights",
+    "🔧 Easy integration with existing systems"
+  ]
+};

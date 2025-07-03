@@ -27,6 +27,7 @@
       "allowedMethods": [
         "GET",
         "POST",
+        "PUT",
         "OPTIONS"
       ],
       "allowedHeaders": [

@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "@azure/cosmos": "^4.4.1",
-    "@azure/web-pubsub": "^1.2.0"
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2"
   }
 }

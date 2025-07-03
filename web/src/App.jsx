@@ -1,16 +1,17 @@
-import React, { useState, useEffect, useCallback } from 'react';
-// import { useMsal } from '@azure/msal-react';
-import AuthButton from './AuthButton';
+import React, { useState, useEffect } from 'react';
 import { useSignalR } from './useSignalR';
 import { API_ENDPOINTS } from './config';
+import { useAuth } from './useAuth';
+import AuthPage from './AuthPage';
+import UserProfile from './UserProfile';
 import './App.css';
 
 function App() {
-  // const { accounts } = useMsal();
-  // const accounts = []; // Temporary: disable MSAL for now
+  const { isAuthenticated, isLoading, login, getUserId } = useAuth();
   const [selectedMood, setSelectedMood] = useState(null);
   const [isLogged, setIsLogged] = useState(false);
   const [stats, setStats] = useState(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   
   const moods = [
     { emoji: '😊', label: 'Happy', color: '#FFE5B4' },
@@ -20,16 +21,7 @@ function App() {
     { emoji: '😴', label: 'Tired', color: '#E5F3E5' }
   ];
 
-  // Get authenticated user ID
-  const getUserId = useCallback(() => {
-    // const accounts = []; // Temporary: disable MSAL for now
-    // if (accounts.length > 0) {
-    //   return accounts[0].localAccountId || accounts[0].homeAccountId;
-    // }
-    return 'demo-user'; // Fallback for demo purposes
-  }, []);
-  
-  // Initialize SignalR connection
+  // Initialize SignalR connection with authenticated user
   const userId = getUserId();
   const { isConnected, messages } = useSignalR(userId);
 
@@ -120,6 +112,30 @@ function App() {
     loadInitialStats();
   }, [getUserId]);
 
+  // Show loading screen while checking authentication
+  if (isLoading) {
+    return (
+      <div className="auth-page">
+        <div className="auth-container">
+          <div className="auth-card">
+            <div className="auth-header">
+              <h1 className="auth-title">🧘‍♀️ CalmSpace</h1>
+              <p className="auth-subtitle">Loading your peaceful sanctuary...</p>
+            </div>
+            <div style={{ textAlign: 'center', padding: '20px' }}>
+              <div className="loading-spinner" style={{ margin: '0 auto' }}></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show login page if not authenticated
+  if (!isAuthenticated) {
+    return <AuthPage onAuthSuccess={login} />;
+  }
+
   return (
     <div className="app">
       <div className="floating-shapes">
@@ -129,42 +145,53 @@ function App() {
       </div>
 
       <header className="hero">
-        <AuthButton />
         <div className="hero-content">
           <h1 className="app-title">
-            
-            CalmSpace
+            🧘‍♀️ CalmSpace
           </h1>
           <p className="app-subtitle">Your peaceful sanctuary for mindful reflection</p>
         </div>
       </header>
 
+      {/* User Profile Component - Shows Welcome Banner and Hamburger Menu */}
+      <UserProfile onMenuToggle={setIsMenuOpen} />
+
       {/* Real-time Connection Status & Notifications */}
       <div className="realtime-status" style={{
         position: 'fixed',
-        top: '70px',
-        left: '20px',
+        top: '85px',
+        left: isMenuOpen ? '340px' : '25px',
         background: isConnected ? '#22c55e' : '#ef4444',
         color: 'white',
-        padding: '8px 16px',
-        borderRadius: '20px',
-        fontSize: '12px',
-        zIndex: 1000
+        padding: '10px 18px',
+        borderRadius: '25px',
+        fontSize: '13px',
+        fontWeight: '500',
+        zIndex: isMenuOpen ? 998 : 1000,
+        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+        backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255, 255, 255, 0.2)'
       }}>
-        {isConnected ? '🟢 Live - Connected' : '🔴 Disconnected'}
+        {isConnected ? '🟢 Live Connected' : '🔴 Disconnected'}
       </div>
       
       {/* Debug: Show message count */}
       <div style={{
         position: 'fixed',
-        top: '110px',
-        left: '20px',
-        background: '#3b82f6',
+        top: '130px',
+        left: isMenuOpen ? '340px' : '25px',
+        background: 'rgba(59, 130, 246, 0.9)',
         color: 'white',
-        padding: '4px 8px',
-        borderRadius: '10px',
-        fontSize: '10px',
-        zIndex: 1000
+        padding: '6px 12px',
+        borderRadius: '15px',
+        fontSize: '11px',
+        fontWeight: '500',
+        zIndex: isMenuOpen ? 998 : 1000,
+        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+        backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255, 255, 255, 0.2)'
       }}>
         Messages: {messages.length}
       </div>
@@ -172,10 +199,11 @@ function App() {
       {messages.length > 0 && (
         <div className="realtime-notifications" style={{
           position: 'fixed',
-          top: '150px',
-          left: '20px',
-          maxWidth: '300px',
-          zIndex: 1000
+          top: '175px',
+          left: isMenuOpen ? '340px' : '25px',
+          maxWidth: '320px',
+          zIndex: isMenuOpen ? 998 : 1000,
+          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
         }}>
           {messages.slice(-3).map((msg, index) => (
             <div key={index} className={`notification ${msg.type}`} style={{
