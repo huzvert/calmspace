@@ -85,10 +85,6 @@ Create `api/local.settings.json`:
 - 😰 Anxious
 - 😴 Tired
 
-## 🎨 Screenshots
-
-[Add screenshots of your app here]
-
 ## 🤝 Contributing
 
 1. Fork the project
