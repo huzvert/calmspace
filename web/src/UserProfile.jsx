@@ -3,13 +3,15 @@ import { useAuth } from './useAuth';
 import MoodHistory from './MoodHistory';
 import MoodAnalytics from './MoodAnalytics';
 import MoodGoals from './MoodGoals';
+import Settings from './Settings';
 
 const UserProfile = ({ onMenuToggle }) => {
   const { user, logout } = useAuth();
   const [showMenu, setShowMenu] = useState(false);
   const [showMoodHistory, setShowMoodHistory] = useState(false);
-  const [showAnalytics, setShowAnalytics] = useState(false);
-  const [showGoals, setShowGoals] = useState(false);
+  const [showMoodAnalytics, setShowMoodAnalytics] = useState(false);
+  const [showMoodGoals, setShowMoodGoals] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   if (!user) return null;
 
@@ -24,23 +26,33 @@ const UserProfile = ({ onMenuToggle }) => {
   };
 
   const handleAnalyticsOpen = () => {
-    setShowAnalytics(true);
+    setShowMoodAnalytics(true);
     setShowMenu(false);
     onMenuToggle?.(false);
   };
 
   const handleAnalyticsClose = () => {
-    setShowAnalytics(false);
+    setShowMoodAnalytics(false);
   };
 
   const handleGoalsOpen = () => {
-    setShowGoals(true);
+    setShowMoodGoals(true);
     setShowMenu(false);
     onMenuToggle?.(false);
   };
 
   const handleGoalsClose = () => {
-    setShowGoals(false);
+    setShowMoodGoals(false);
+  };
+
+  const handleSettingsOpen = () => {
+    setShowSettings(true);
+    setShowMenu(false);
+    onMenuToggle?.(false);
+  };
+
+  const handleSettingsClose = () => {
+    setShowSettings(false);
   };
 
   const handleLogout = () => {
@@ -100,7 +112,7 @@ const UserProfile = ({ onMenuToggle }) => {
               My Analytics
             </button>
             
-            <button className="menu-item" onClick={() => {setShowMenu(false); onMenuToggle?.(false);}}>
+            <button className="menu-item" onClick={handleSettingsOpen}>
               <span className="menu-icon">⚙️</span>
               Settings
             </button>
@@ -134,13 +146,18 @@ const UserProfile = ({ onMenuToggle }) => {
       )}
 
       {/* Analytics Modal */}
-      {showAnalytics && (
+      {showMoodAnalytics && (
         <MoodAnalytics onClose={handleAnalyticsClose} />
       )}
 
       {/* Goals Modal */}
-      {showGoals && (
+      {showMoodGoals && (
         <MoodGoals onClose={handleGoalsClose} />
+      )}
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <Settings onClose={handleSettingsClose} />
       )}
     </>
   );

@@ -5,15 +5,12 @@ import { useAuth } from './useAuth';
 
 const MoodGoals = ({ onClose }) => {
   const { getUserId } = useAuth();
-  const [goals, setGoals] = useState([
-    { id: 1, title: 'Log mood daily', target: 7, current: 3, completed: false },
-    { id: 2, title: 'Have 5 positive days', target: 5, current: 2, completed: false },
-    { id: 3, title: 'Write 3 journal entries', target: 3, current: 1, completed: false }
-  ]);
-
+  const [goals, setGoals] = useState([]);
   const [newGoal, setNewGoal] = useState({ title: '', target: 1 });
   const [moodData, setMoodData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [goalsLoading, setGoalsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Disable background scrolling when modal is open
   useEffect(() => {
@@ -25,6 +22,39 @@ const MoodGoals = ({ onClose }) => {
       document.body.style.overflow = 'unset';
     };
   }, []);
+
+  // Fetch goals from backend
+  useEffect(() => {
+    const fetchGoals = async () => {
+      try {
+        setGoalsLoading(true);
+        setError(null);
+        
+        const userId = getUserId();
+        const response = await fetch(`${API_ENDPOINTS.GET_GOALS}?userId=${userId}`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          setGoals(data.goals || []);
+        } else {
+          throw new Error(`Failed to fetch goals: ${response.statusText}`);
+        }
+      } catch (err) {
+        console.error('Error fetching goals:', err);
+        setError(err.message);
+        // Fallback to default goals if fetch fails
+        setGoals([
+          { id: 1, title: 'Log mood daily', target: 7, current: 3, completed: false },
+          { id: 2, title: 'Have 5 positive days', target: 5, current: 2, completed: false },
+          { id: 3, title: 'Write 3 journal entries', target: 3, current: 1, completed: false }
+        ]);
+      } finally {
+        setGoalsLoading(false);
+      }
+    };
+
+    fetchGoals();
+  }, [getUserId]);
 
   // Fetch mood data for visualizations
   useEffect(() => {
@@ -47,30 +77,84 @@ const MoodGoals = ({ onClose }) => {
     fetchMoodData();
   }, [getUserId]);
 
-  const addGoal = () => {
+  const addGoal = async () => {
     if (newGoal.title.trim()) {
-      setGoals([...goals, {
-        id: Date.now(),
-        title: newGoal.title,
-        target: newGoal.target,
-        current: 0,
-        completed: false
-      }]);
-      setNewGoal({ title: '', target: 1 });
+      try {
+        const payload = {
+          userId: getUserId(),
+          goalName: newGoal.title,
+          target: newGoal.target,
+          progress: 0
+        };
+
+        const response = await fetch(API_ENDPOINTS.CREATE_GOAL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setGoals(prev => [...prev, data.goal]);
+          setNewGoal({ title: '', target: 1 });
+        } else {
+          throw new Error(`Failed to create goal: ${response.statusText}`);
+        }
+      } catch (error) {
+        console.error('Error creating goal:', error);
+        setError(error.message);
+      }
     }
   };
 
-  const updateGoal = (id, current) => {
-    setGoals(goals.map(goal => {
-      if (goal.id === id) {
-        return { ...goal, current, completed: current >= goal.target };
+  const updateGoal = async (id, current) => {
+    try {
+      const payload = {
+        goalId: id,
+        progress: current,
+        userId: getUserId()
+      };
+
+      const response = await fetch(API_ENDPOINTS.UPDATE_GOAL, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setGoals(prev => prev.map(goal => 
+          goal.id === id ? data.goal : goal
+        ));
+      } else {
+        throw new Error(`Failed to update goal: ${response.statusText}`);
       }
-      return goal;
-    }));
+    } catch (error) {
+      console.error('Error updating goal:', error);
+      setError(error.message);
+      // Revert optimistic update if needed
+    }
   };
 
-  const deleteGoal = (id) => {
-    setGoals(goals.filter(goal => goal.id !== id));
+  const deleteGoal = async (id) => {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.DELETE_GOAL}?goalId=${id}&userId=${getUserId()}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setGoals(prev => prev.filter(goal => goal.id !== id));
+      } else {
+        throw new Error(`Failed to delete goal: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Error deleting goal:', error);
+      setError(error.message);
+    }
   };
 
   // Calculate mood statistics for visualizations
@@ -131,6 +215,33 @@ const MoodGoals = ({ onClose }) => {
         </div>
 
         <div className="goals-content">
+          {/* Error Message */}
+          {error && (
+            <div className="error-message" style={{
+              background: '#fee2e2',
+              border: '1px solid #fecaca',
+              color: '#dc2626',
+              padding: '12px',
+              borderRadius: '8px',
+              marginBottom: '20px'
+            }}>
+              <p>⚠️ {error}</p>
+              <button 
+                onClick={() => setError(null)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#dc2626',
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                  fontSize: '0.9rem'
+                }}
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
+
           {/* Encouraging Message */}
           <div className="encouraging-message">
             <p>{getEncouragingMessage()}</p>
@@ -224,7 +335,24 @@ const MoodGoals = ({ onClose }) => {
 
           <div className="goals-list">
             <h3>Your Goals</h3>
-            {goals.length === 0 ? (
+            {goalsLoading ? (
+              <div className="loading-state" style={{
+                textAlign: 'center',
+                padding: '20px',
+                color: '#6b7280'
+              }}>
+                <div className="loading-spinner" style={{
+                  border: '3px solid #f3f4f6',
+                  borderTop: '3px solid #667eea',
+                  borderRadius: '50%',
+                  width: '30px',
+                  height: '30px',
+                  animation: 'spin 1s linear infinite',
+                  margin: '0 auto 10px'
+                }}></div>
+                <p>Loading your goals...</p>
+              </div>
+            ) : goals.length === 0 ? (
               <p className="no-goals">No goals set yet. Add one above!</p>
             ) : (
               goals.map(goal => (

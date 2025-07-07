@@ -26,6 +26,65 @@ function App() {
   const userId = getUserId();
   const { isConnected, messages } = useSignalR(userId);
 
+  // Initialize dark mode theme on app load
+  useEffect(() => {
+    const initializeDarkMode = async () => {
+      // Always check localStorage first for immediate application
+      const storedDarkMode = localStorage.getItem('calmspace-dark-mode') === 'true';
+      
+      // Apply immediately from localStorage
+      if (storedDarkMode) {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
+      
+      const userId = getUserId();
+      
+      if (userId) {
+        try {
+          // Try to sync with backend preference
+          const response = await fetch(`${API_ENDPOINTS.GET_USER_SETTINGS}?userId=${userId}`);
+          
+          if (response.ok) {
+            const text = await response.text();
+            if (text.trim()) {
+              const settings = JSON.parse(text);
+              const backendDarkMode = settings.darkMode !== undefined ? settings.darkMode : false;
+              
+              // If backend differs from localStorage, use backend and update localStorage
+              if (backendDarkMode !== storedDarkMode) {
+                if (backendDarkMode) {
+                  document.body.classList.add('dark-mode');
+                } else {
+                  document.body.classList.remove('dark-mode');
+                }
+                localStorage.setItem('calmspace-dark-mode', backendDarkMode.toString());
+              }
+            }
+          }
+          // If API fails, keep using localStorage preference (already applied above)
+        } catch (error) {
+          console.warn('Could not sync dark mode preference with backend:', error);
+          // Keep using localStorage preference (already applied above)
+        }
+      }
+      // If no user, localStorage preference is already applied above
+    };
+
+    if (isAuthenticated) {
+      initializeDarkMode();
+    } else {
+      // For unauthenticated users, just use localStorage
+      const storedDarkMode = localStorage.getItem('calmspace-dark-mode') === 'true';
+      if (storedDarkMode) {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
+    }
+  }, [isAuthenticated, getUserId]);
+
   // Handle mood selection
   const handleMoodSelect = (mood) => {
     setSelectedMood(mood);

@@ -24,13 +24,13 @@ module.exports = async function (context, req) {
     return;
   }
 
-  const { mood, userId, timestamp } = req.body;
+  const { mood, userId, timestamp, note } = req.body;
 
   if (!mood || !userId || !timestamp) {
     context.res = {
       ...context.res,
       status: 400,
-      body: "Missing required fields.",
+      body: "Missing required fields: mood, userId, and timestamp are required.",
     };
     return;
   }
@@ -43,6 +43,7 @@ module.exports = async function (context, req) {
       mood,
       userId,
       timestamp,
+      ...(note && { note }) // Include note only if provided
     };
 
     await container.items.create(newEntry);
@@ -104,7 +105,8 @@ module.exports = async function (context, req) {
           mood,
           timestamp,
           userId,
-          message: `🎉 ${username} logged: ${mood}`,
+          note,
+          message: `🎉 ${username} logged: ${mood}${note ? ' with a note' : ''}`,
           id: newEntry.id
         }]
       }];

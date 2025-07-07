@@ -24,6 +24,8 @@ module.exports = async function (context, req) {
   }
 
   const userId = req.query.userId || req.body?.userId;
+  const date = req.query.date; // Optional date filter (YYYY-MM-DD format)
+  const includeEntries = req.query.includeEntries === 'true'; // Whether to return individual entries
 
   if (!userId) {
     context.res = {
@@ -37,10 +39,23 @@ module.exports = async function (context, req) {
   try {
     const container = client.database(databaseId).container(containerId);
 
-    const query = {
-      query: "SELECT * FROM c WHERE c.userId = @userId",
-      parameters: [{ name: "@userId", value: userId }],
-    };
+    let query;
+    if (date) {
+      // Filter by specific date
+      query = {
+        query: "SELECT * FROM c WHERE c.userId = @userId AND STARTSWITH(c.timestamp, @date) ORDER BY c.timestamp DESC",
+        parameters: [
+          { name: "@userId", value: userId },
+          { name: "@date", value: date }
+        ],
+      };
+    } else {
+      // Get all entries for the user
+      query = {
+        query: "SELECT * FROM c WHERE c.userId = @userId ORDER BY c.timestamp DESC",
+        parameters: [{ name: "@userId", value: userId }],
+      };
+    }
 
     const { resources: results } = await container.items.query(query).fetchAll();
 
@@ -77,14 +92,26 @@ module.exports = async function (context, req) {
     const daysTracked = uniqueDates.size;
     const positiveDaysPercentage = daysTracked > 0 ? Math.round((positiveDaysSet.size / daysTracked) * 100) : 0;
 
+    const response = {
+      daysTracked,
+      mostCommonMood: mostCommonMood || 'None',
+      positiveDaysPercentage
+    };
+
+    // Include individual entries if requested
+    if (includeEntries) {
+      response.entries = results.map(entry => ({
+        id: entry.id,
+        mood: entry.mood,
+        timestamp: entry.timestamp,
+        note: entry.note || null
+      }));
+    }
+
     context.res = {
       ...context.res,
       status: 200,
-      body: {
-        daysTracked,
-        mostCommonMood: mostCommonMood || 'None',
-        positiveDaysPercentage
-      }
+      body: response
     };
   } catch (error) {
     context.log("Error:", error.message);
